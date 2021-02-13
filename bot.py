@@ -49,7 +49,7 @@ client = MyClient(intents=intents, command_prefix='.')
 
 @client.command()
 async def clear(ctx, args: int):
-    async for msgs in ctx.history(limit=args):
+    async for msgs in ctx.history(limit=args+1):
         await msgs.delete()
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
