@@ -1,4 +1,5 @@
 import discord
+from discord.ext import commands
 import datetime
 import os
 
@@ -11,15 +12,19 @@ commandstxtroom = 806358409460842520
 hwtxtroom = 808193962128572436
 updatestxtroom = 809454664017641542
 
-
-class MyClient(discord.Client):
+class MyClient(commands.Bot):
     async def on_ready(self):
         print('~~~~bot is online~~~~')
+        channel = self.get_channel(updatestxtroom)
+        async for message in channel.history(limit=None):
+            if message.content.find('has change status from') != -1:
+                await message.delete()
 
     async def on_member_update(self ,beforemember, aftermember):
         if beforemember.bot == False and beforemember.status != aftermember.status:
             channel = self.get_channel(updatestxtroom)
-            await channel.send(f'{beforemember.name} has change status from {beforemember.status} to {aftermember.status}!')
+            await channel.send(content=f'{beforemember.name} has change status from {beforemember.status} to {aftermember.status}!', delete_after=600)
+
     
     async def on_reaction_add(self, reaction, member):
         if reaction.emoji.id == pinemojiid:
@@ -36,12 +41,15 @@ class MyClient(discord.Client):
             msg = await channel.fetch_message(payload.message_id)
             await msg.unpin()
 
-
 intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 intents.messages = True
+client = MyClient(intents=intents, command_prefix='.')
 
+@client.command()
+async def clear(ctx, args: int):
+    async for msgs in ctx.history(limit=args):
+        await msgs.delete()
 
-client = MyClient(intents=intents)
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
