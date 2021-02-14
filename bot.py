@@ -12,6 +12,7 @@ commandstxtroom = 806358409460842520
 hwtxtroom = 808193962128572436
 updatestxtroom = 809454664017641542
 
+
 class MyClient(commands.Bot):
     async def on_ready(self):
         print('~~~~bot is online~~~~')
@@ -26,14 +27,16 @@ class MyClient(commands.Bot):
             await channel.send(content=f'{beforemember.name} has change status from {beforemember.status} to {aftermember.status}!', delete_after=600)
 
     
-    async def on_reaction_add(self, reaction, member):
-        if reaction.emoji.id == pinemojiid:
+    async def on_raw_reaction_add(self, payload):
+        if payload.emoji.id == pinemojiid:
             time = datetime.datetime.utcnow()
-            await reaction.message.pin()
-            msgs = await reaction.message.channel.history(after=time).flatten()
-            for msg in msgs:
-                if msg.type == discord.MessageType.pins_add and msg.author.id == botid:
-                    await msg.delete()
+            channel = discord.utils.get(self.get_all_channels(), id=payload.channel_id)
+            msg = await channel.fetch_message(payload.message_id)
+            await msg.pin()
+            msgs = await channel.history(after=time).flatten()
+            for msgloop in msgs:
+                if msgloop.type == discord.MessageType.pins_add and msgloop.author.id == botid:
+                    await msgloop.delete()
 
     async def on_raw_reaction_remove(self, payload):
         if payload.emoji.id == pinemojiid:
