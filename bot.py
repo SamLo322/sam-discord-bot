@@ -18,13 +18,13 @@ class MyClient(commands.Bot):
         print('~~~~bot is online~~~~')
         channel = self.get_channel(updatestxtroom)
         async for message in channel.history(limit=None):
-            if message.content.find('has change status from') != -1:
+            if message.content.find('has change status from') != -1 and message.author.id == botid:
                 await message.delete()
 
     async def on_member_update(self ,beforemember, aftermember):
         if beforemember.bot == False and beforemember.status != aftermember.status:
             channel = self.get_channel(updatestxtroom)
-            await channel.send(content=f'{beforemember.name} has change status from {beforemember.status} to {aftermember.status}!', delete_after=600)
+            await channel.send(content=f'{beforemember.name} has change status from {beforemember.status} to {aftermember.status}!', delete_after=300)
 
     
     async def on_raw_reaction_add(self, payload):
@@ -52,7 +52,17 @@ client = MyClient(intents=intents, command_prefix='.')
 
 @client.command()
 async def clear(ctx, args: int):
-    async for msgs in ctx.history(limit=args+1):
-        await msgs.delete()
+    if args > 100:
+        await ctx.send('you cannot clear more than 100 messages in a role.')
+    else:
+        list = []
+        async for msg in ctx.history(limit=args+1):
+            list.append(msg)
+        await ctx.channel.delete_messages(list)
+
+@client.command()
+async def send(ctx, args: int):
+    for i in range(1, args+1):
+        await ctx.send(i)
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
