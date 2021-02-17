@@ -75,7 +75,7 @@ async def lol(ctx, args):
         async with ctx.typing():
             soup = BeautifulSoup(requests.get('https://tw.op.gg/champion/statistics').text, 'html.parser')
             role = soup.findAll('tbody')[mainlist.index(args)]
-            embed = discord.Embed(title=args.lower() + ' champs', color=0x03f8fc, timestamp=ctx.message.created_at)
+            embed = discord.Embed(title=args.upper() + ' champs (request by '+ ctx.author.name+')' , color=0x03f8fc, timestamp=ctx.message.created_at)
             checkindex = -1
             for champ in role.findAll('tr'):
                 name = champ.findNext('div', class_='champion-index-table__name').string
