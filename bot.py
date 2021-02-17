@@ -53,11 +53,12 @@ client = MyClient(intents=intents, command_prefix='.')
 
 @client.command()
 async def clear(ctx, args: int):
+    await ctx.message.delete()
     if args > 100:
         await ctx.send('you cannot clear more than 100 messages in a role.')
     else:
         list = []
-        async for msg in ctx.history(limit=args+1):
+        async for msg in ctx.history(limit=args):
             list.append(msg)
         await ctx.channel.delete_messages(list)
 
@@ -68,6 +69,7 @@ async def send(ctx, args: int):
 
 @client.command()
 async def lol(ctx, args):
+    await ctx.message.delete()
     mainlist=['top', 'jg', 'ap', 'ad', 'sup']
     if args.lower() in mainlist:
         async with ctx.typing():
@@ -86,12 +88,12 @@ async def lol(ctx, args):
                 checkindex += 1
                 if(len(embed) > 6000 or checkindex == 24):
                     embed.remove_field(checkindex)
-                    await ctx.send(embed=embed)
+                    await ctx.send(embed=embed, delete_after=1200)
                     embed.clear_fields()
                     embed.add_field(name=f'**{name}**', value=f'> Rank: {rank} Tier: {tier}\n> Winrate: {wrate}\n> Pickrate: {prate}\n> Link: [{name}\'s details](https://tw.op.gg{link})',inline=True)
                     checkindex = 0
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, delete_after=1200)
     else:
-        await ctx.send('pls type [top/ jg/ ap/ ad/ sup] after \'lol\' to clarify your role.')
+        await ctx.send('pls type [top/ jg/ ap/ ad/ sup] after \'lol\' to clarify your role.', delete_after=60)
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
