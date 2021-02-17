@@ -63,49 +63,33 @@ async def clear(ctx, args: int):
 
 @client.command()
 async def send(ctx, args: int):
-    for i in range(1, args+1):
+    for i in range(1, args + 1):
         await ctx.send(i)
 
 @client.command()
 async def lol(ctx, args):
     mainlist=['top', 'jg', 'ap', 'ad', 'sup']
-    if args in mainlist:
-        all = requests.get('https://na.op.gg/champion/statistics')
-        soup = BeautifulSoup(all.text, 'html.parser')
-        if args == mainlist[0]:
-            role = soup.findAll('tbody')[0]
-            embed = discord.Embed(title=mainlist[0] + ' champs', color=0x03f8fc, timestamp= ctx.message.created_at)
-        elif args == mainlist[1]:
-            role = soup.findAll('tbody')[1]
-            embed = discord.Embed(title=mainlist[1] + ' champs', color=0x03f8fc, timestamp= ctx.message.created_at)
-        elif args == mainlist[2]:
-            role = soup.findAll('tbody')[2]
-            embed = discord.Embed(title=mainlist[2] + ' champs', color=0x03f8fc, timestamp= ctx.message.created_at)
-        elif args == mainlist[3]:
-            role = soup.findAll('tbody')[3]
-            embed = discord.Embed(title=mainlist[3] + ' champs', color=0x03f8fc, timestamp= ctx.message.created_at)
-        elif args == mainlist[4]:
-            role = soup.findAll('tbody')[4]
-            embed = discord.Embed(title=mainlist[4] + ' champs', color=0x03f8fc, timestamp= ctx.message.created_at)            
-        count = 0
-        list=[]
-        for i in role.findAll('tr'):
-            champ = role.findAll('tr')[count]
-            rank = champ.findAll('td', class_='champion-index-table__cell champion-index-table__cell--rank')[0]
-            finalrank = rank.string
-            name = champ.findAll('div', class_='champion-index-table__name')[0]
-            finalname = name.string
-            wrate = champ.findAll('td', class_='champion-index-table__cell champion-index-table__cell--value')[0]
-            finalwrate = wrate.string
-            prate = champ.findAll('td', class_='champion-index-table__cell champion-index-table__cell--value')[1]
-            finalprate = prate.string
-            tmp = champ.findAll('img')[1]
-            tier = tmp['src']
-            finaltier = tier[-5]
-            list.append((finalname, finalrank, finalwrate, finalprate, finaltier))
-            count += 1
-        for finalname, finalrank, finalwrate, finalprate, finaltier in list:
-                embed.add_field(name=f'**{finalname}**', value=f'> rank: {finalrank}\n> winrate: {finalwrate}\n> pickrate: {finalprate}\n> tier: {finaltier}',inline=False)
+    if args.lower() in mainlist:
+        async with ctx.typing():
+            soup = BeautifulSoup(requests.get('https://tw.op.gg/champion/statistics').text, 'html.parser')
+            role = soup.findAll('tbody')[mainlist.index(args)]
+            embed = discord.Embed(title=args.lower() + ' champs', color=0x03f8fc, timestamp=ctx.message.created_at)
+            checkindex = -1
+            for champ in role.findAll('tr'):
+                name = champ.findNext('div', class_='champion-index-table__name').string
+                rank = champ.findNext('td', class_='champion-index-table__cell--rank').string
+                wrate = champ.findNext('td', class_='champion-index-table__cell--value').string
+                prate = champ.findAll('td', class_='champion-index-table__cell--value')[1].string
+                tier = champ.findAll('img')[1]['src'][-5]
+                link = champ.findNext('a')['href']
+                embed.add_field(name=f'**{name}**', value=f'> Rank: {rank} Tier: {tier}\n> Winrate: {wrate}\n> Pickrate: {prate}\n> Link: [{name}\'s details](https://tw.op.gg{link})',inline=True)
+                checkindex += 1
+                if(len(embed) > 6000 or checkindex == 24):
+                    embed.remove_field(checkindex)
+                    await ctx.send(embed=embed)
+                    embed.clear_fields()
+                    embed.add_field(name=f'**{name}**', value=f'> Rank: {rank} Tier: {tier}\n> Winrate: {wrate}\n> Pickrate: {prate}\n> Link: [{name}\'s details](https://tw.op.gg{link})',inline=True)
+                    checkindex = 0
         await ctx.send(embed=embed)
     else:
         await ctx.send('pls type [top/ jg/ ap/ ad/ sup] after \'lol\' to clarify your role.')
