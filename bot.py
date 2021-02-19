@@ -114,15 +114,15 @@ async def lol(ctx, args):
             driver.execute_script("document.querySelector(\".sc-fznyAO.cWTQXI.BeaconFabButtonFrame\").outerHTML = \"\"")
             ele = driver.find_element(By.CSS_SELECTOR, '.champion-overview__table.champion-overview__table--summonerspell')
             ele.screenshot('image.png')
-            await ctx.send(file=discord.File('image.png'), delete_after=30)
+            await ctx.send(file=discord.File('image.png'), delete_after=1200)
             time.sleep(0.5)
             ele = driver.find_elements_by_css_selector('.champion-overview__table')[1] # .find_element(By.CSS_SELECTOR, 'thead')
             ele.screenshot('image.png')
-            await ctx.send(file=discord.File('image.png'), delete_after=30)
+            await ctx.send(file=discord.File('image.png'), delete_after=1200)
             time.sleep(0.5)
             ele = driver.find_elements_by_css_selector('.tabWrap._recognized')[2]
             ele.screenshot('image.png')
-            await ctx.send(file=discord.File('image.png'), delete_after=30)
+            await ctx.send(file=discord.File('image.png'), delete_after=1200)
 
         else:
             await ctx.send('pls type [top/ jg/ ap/ ad/ sup] after \'lol\' to clarify your role.', delete_after=60)
