@@ -1,9 +1,12 @@
 import discord
 from discord.ext import commands
 import datetime
+import time
 import os
 import requests
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 
 botid = 809322014660624445
 pinemojiid = 809454773786771497
@@ -13,6 +16,13 @@ commandstxtroom = 806358409460842520
 hwtxtroom = 808193962128572436
 updatestxtroom = 809454664017641542
 
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--log-level=3")
+chrome_options.binary_location = "/app/.apt/usr/bin/google-chrome"
+driver = webdriver.Chrome(executable_path="/app/.chromedriver/bin/chromedriver", options=chrome_options)
+driver.set_window_size(1920, 1080)
 
 class MyClient(commands.Bot):
     async def on_ready(self):
@@ -70,10 +80,13 @@ async def send(ctx, args: int):
 @client.command()
 async def lol(ctx, args):
     await ctx.message.delete()
-    mainlist=['top', 'jg', 'ap', 'ad', 'sup']
-    if args.lower() in mainlist:
-        async with ctx.typing():
-            soup = BeautifulSoup(requests.get('https://tw.op.gg/champion/statistics').text, 'html.parser')
+    async with ctx.typing():
+        soup = BeautifulSoup(requests.get('https://tw.op.gg/champion/statistics').text, 'html.parser')
+        mainlist=['top', 'jg', 'ap', 'ad', 'sup']
+        champlist = []
+        for name in soup.findAll('div', class_='champion-index__champion-item__name'):
+            champlist.append(name.string)
+        if args.lower() in mainlist:
             role = soup.findAll('tbody')[mainlist.index(args)]
             embed = discord.Embed(title=args.upper() + ' champs (request by '+ ctx.author.name+')' , color=0x03f8fc, timestamp=ctx.message.created_at)
             checkindex = -1
@@ -84,16 +97,34 @@ async def lol(ctx, args):
                 prate = champ.findAll('td', class_='champion-index-table__cell--value')[1].string
                 tier = champ.findAll('img')[1]['src'][-5]
                 link = champ.findNext('a')['href']
-                embed.add_field(name=f'**{name}**', value=f'> Rank: {rank} Tier: {tier}\n> Winrate: {wrate}\n> Pickrate: {prate}\n> Link: [{name}\'s details](https://tw.op.gg{link})',inline=True)
+                embed.add_field(name=f'**{name}**', value=f'> Rank: {rank} Tier: {tier}\n> Winrate: {wrate}\n> Pickrate: {prate}\n> [{name}\'s details](https://tw.op.gg{link})',inline=True)
                 checkindex += 1
                 if(len(embed) > 6000 or checkindex == 24):
                     embed.remove_field(checkindex)
                     await ctx.send(embed=embed, delete_after=1200)
                     embed.clear_fields()
-                    embed.add_field(name=f'**{name}**', value=f'> Rank: {rank} Tier: {tier}\n> Winrate: {wrate}\n> Pickrate: {prate}\n> Link: [{name}\'s details](https://tw.op.gg{link})',inline=True)
+                    embed.add_field(name=f'**{name}**', value=f'> Rank: {rank} Tier: {tier}\n> Winrate: {wrate}\n> Pickrate: {prate}\n> [{name}\'s details](https://tw.op.gg{link})',inline=True)
                     checkindex = 0
-        await ctx.send(embed=embed, delete_after=1200)
-    else:
-        await ctx.send('pls type [top/ jg/ ap/ ad/ sup] after \'lol\' to clarify your role.', delete_after=60)
+            await ctx.send(embed=embed, delete_after=1200)
+
+        elif args.capitalize() in champlist:
+            name = args.lower()
+            driver.get('https://tw.op.gg/champion/' + name + '/statistics/')
+            time.sleep(3)
+            driver.execute_script("document.querySelector(\".sc-fznyAO.cWTQXI.BeaconFabButtonFrame\").outerHTML = \"\"")
+            ele = driver.find_element(By.CSS_SELECTOR, '.champion-overview__table.champion-overview__table--summonerspell')
+            ele.screenshot('image.png')
+            await ctx.send(file=discord.File('image.png'), delete_after=30)
+            time.sleep(0.5)
+            ele = driver.find_elements_by_css_selector('.champion-overview__table')[1] # .find_element(By.CSS_SELECTOR, 'thead')
+            ele.screenshot('image.png')
+            await ctx.send(file=discord.File('image.png'), delete_after=30)
+            time.sleep(0.5)
+            ele = driver.find_elements_by_css_selector('.tabWrap._recognized')[2]
+            ele.screenshot('image.png')
+            await ctx.send(file=discord.File('image.png'), delete_after=30)
+
+        else:
+            await ctx.send('pls type [top/ jg/ ap/ ad/ sup] after \'lol\' to clarify your role.', delete_after=60)
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))
